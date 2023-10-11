@@ -9,6 +9,7 @@
     "@elysiajs/cors": "^0.7.1",
     "@elysiajs/html": "^0.7.3",
     "@elysiajs/static": "^0.7.1",
+    "date-fns": "^2.30.0",
     "elysia": "latest"
   },
   "devDependencies": {

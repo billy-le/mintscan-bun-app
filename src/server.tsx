@@ -2,13 +2,14 @@ import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
+import { format as formatDate, parseISO } from "date-fns";
 
 // components
 import { BaseHtml } from "./layouts/base-html";
 import { Button } from "./ui/Button";
 import { chains } from "./data/chains";
 
-const mintscanApi = "https://apis.mintscan.io/v1/";
+const mintscanApi = "https://apis.mintscan.io/v1";
 
 const app = new Elysia()
   .use(cors())
@@ -53,10 +54,20 @@ const app = new Elysia()
                       class="border border-slate-300 rounded-md py-1 px-3 w-full"
                     />
                   </fieldset>
-                  <fieldset class="flex items-end">
-                    <Button type="submit" text="Submit" />
+                </div>
+                <div class="flex gap-4">
+                  <fieldset class="space-y-1.5">
+                    <label for="fromDate">From</label>
+                    <input type="date" id="fromDate" name="from" />
+                  </fieldset>
+                  <fieldset class="space-y-1.5">
+                    <label for="toDate">To</label>
+                    <input type="date" id="toDate" name="to" />
                   </fieldset>
                 </div>
+                <fieldset class="flex items-end">
+                  <Button type="submit" text="Submit" />
+                </fieldset>
               </form>
             </section>
             <section>
@@ -68,9 +79,50 @@ const app = new Elysia()
       .post(
         "/",
         ({ body }) => {
-          return new Response(JSON.stringify(body, null, 2));
+          try {
+            const url = new URL(
+              `${mintscanApi}/${body.chain}/accounts/${body.address}/transactions`
+            );
+
+            if (body.from) {
+              url.searchParams.set(
+                "fromDateTime",
+                formatDate(parseISO(body.from), "yyyy-MM-dd")
+              );
+            }
+
+            if (body.to) {
+              url.searchParams.set(
+                "toDateTime",
+                formatDate(parseISO(body.to), "yyyy-MM-dd")
+              );
+            }
+
+            const data = fetch(url, {
+              method: "get",
+              headers: {
+                Authorization: `Bearer ${process.env.MINTSCAN_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+            }).then((data) => data.json());
+
+            return data;
+          } catch (err) {
+            console.log(err);
+            return { error: "There was an error" };
+          }
         },
-        { body: t.Object({ chain: t.String(), address: t.String() }) }
+        {
+          body: t.Object(
+            {
+              chain: t.String(),
+              address: t.String(),
+              from: t.Optional(t.String()),
+              to: t.Optional(t.String()),
+            },
+            { description: "s" }
+          ),
+        }
       )
   )
   .listen(3000);
