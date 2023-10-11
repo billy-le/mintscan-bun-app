@@ -80,15 +80,19 @@ const app = new Elysia()
                 </div>
               </form>
             </section>
-            <section>
-              <code id="network-response" class="lang-json block" />
+            <section class="overflow-auto max-h-96 h-full">
+              <code
+                id="network-response"
+                class="lang-json block"
+                style="word-break:break-word;"
+              />
             </section>
           </body>
         </BaseHtml>
       ))
       .post(
         "/",
-        ({ body }) => {
+        async ({ body }) => {
           try {
             const url = new URL(
               `${mintscanApi}/${body.chain}/accounts/${body.address}/transactions`
@@ -108,15 +112,34 @@ const app = new Elysia()
               );
             }
 
-            const data = fetch(url, {
-              method: "get",
-              headers: {
-                Authorization: `Bearer ${process.env.MINTSCAN_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-            }).then((data) => data.json());
+            let transactions: any[] = [];
 
-            return data;
+            async function getData(url: URL) {
+              const data = await fetch(url, {
+                method: "get",
+                headers: {
+                  Authorization: `Bearer ${process.env.MINTSCAN_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+              }).then((data) => data.json());
+
+              if (data.transactions.length) {
+                transactions.push(...data.transactions);
+              }
+
+              if (data.pagination.searchAfter) {
+                url.searchParams.set(
+                  "searchAfter",
+                  data.pagination.searchAfter
+                );
+
+                await getData(url);
+              }
+            }
+
+            await getData(url);
+
+            return transactions;
           } catch (err) {
             console.log(err);
             return { error: "There was an error" };
