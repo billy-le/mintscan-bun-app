@@ -3,7 +3,7 @@ export const chains = [
   "osmosis",
   "akash",
   "archway",
-  "assetmantle",
+  "asset-mantle",
   "axelar",
   "band",
   "bitcanna",
@@ -17,7 +17,7 @@ export const chains = [
   "emoney",
   "evmos",
   "fetch-ai",
-  "gravitybridge",
+  "gravity-bridge",
   "injective",
   "iris",
   "ixo",
@@ -58,4 +58,4 @@ export const chains = [
   "coreum",
   "noble",
   "humans",
-];
+].sort((a, b) => a.localeCompare(b));
