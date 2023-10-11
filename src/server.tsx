@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
+import { staticPlugin } from "@elysiajs/static";
 
 // components
 import { BaseHtml } from "./layouts/base-html";
@@ -12,6 +13,7 @@ const mintscanApi = "https://apis.mintscan.io/v1/";
 const app = new Elysia()
   .use(cors())
   .use(html())
+  .use(staticPlugin())
   .group("/", (app) =>
     app
       .get("/", () => (
@@ -57,7 +59,9 @@ const app = new Elysia()
                 </div>
               </form>
             </section>
-            <section id="network-response" />
+            <section>
+              <code id="network-response" class="lang-json block" />
+            </section>
           </body>
         </BaseHtml>
       ))
