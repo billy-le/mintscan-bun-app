@@ -34,7 +34,7 @@ const app = new Elysia()
                       Select Chain
                     </label>
                     <select
-                      class="px-3 py-2 border-none rounded-md"
+                      class="px-3 py-1.5 border border-slate-300 rounded-md bg-transparent"
                       id="chain"
                       name="chain"
                     >
@@ -56,18 +56,28 @@ const app = new Elysia()
                   </fieldset>
                 </div>
                 <div class="flex gap-4">
-                  <fieldset class="space-y-1.5">
+                  <fieldset class="space-y-1.5 space-x-2">
                     <label for="fromDate">From</label>
-                    <input type="date" id="fromDate" name="from" />
+                    <input
+                      type="date"
+                      id="fromDate"
+                      name="from"
+                      class="border border-slate-300 px-3 py-1 rounded-md"
+                    />
                   </fieldset>
-                  <fieldset class="space-y-1.5">
+                  <fieldset class="space-y-1.5 space-x-2">
                     <label for="toDate">To</label>
-                    <input type="date" id="toDate" name="to" />
+                    <input
+                      type="date"
+                      id="toDate"
+                      name="to"
+                      class="border border-slate-300 px-3 py-1 rounded-md"
+                    />
+                  </fieldset>
+                  <fieldset class="flex-grow flex items-end justify-end">
+                    <Button type="submit" text="Submit" />
                   </fieldset>
                 </div>
-                <fieldset class="flex items-end">
-                  <Button type="submit" text="Submit" />
-                </fieldset>
               </form>
             </section>
             <section>
@@ -113,15 +123,12 @@ const app = new Elysia()
           }
         },
         {
-          body: t.Object(
-            {
-              chain: t.String(),
-              address: t.String(),
-              from: t.Optional(t.String()),
-              to: t.Optional(t.String()),
-            },
-            { description: "s" }
-          ),
+          body: t.Object({
+            chain: t.String(),
+            address: t.String(),
+            from: t.Optional(t.String()),
+            to: t.Optional(t.String()),
+          }),
         }
       )
   )
