@@ -2,7 +2,13 @@ import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { html } from "@elysiajs/html";
 import { staticPlugin } from "@elysiajs/static";
-import { format as formatDate, parseISO } from "date-fns";
+import {
+  endOfDay,
+  format as formatDate,
+  isAfter,
+  parseISO,
+  startOfDay,
+} from "date-fns";
 
 // components
 import { BaseHtml } from "./layouts/base-html";
@@ -80,10 +86,10 @@ const app = new Elysia()
                 </div>
               </form>
             </section>
-            <section class="overflow-auto max-h-96 h-full">
+            <section class="overflow-hidden h-96">
               <code
                 id="network-response"
-                class="lang-json block"
+                class="lang-json block h-full overflow-y-auto"
                 style="word-break:break-word;"
               />
             </section>
@@ -98,18 +104,38 @@ const app = new Elysia()
               `${mintscanApi}/${body.chain}/accounts/${body.address}/transactions`
             );
 
+            let fromDateTime, toDateTime;
+
             if (body.from) {
+              fromDateTime = startOfDay(parseISO(body.from));
               url.searchParams.set(
                 "fromDateTime",
-                formatDate(parseISO(body.from), "yyyy-MM-dd")
+                formatDate(fromDateTime, "yyyy-MM-dd")
               );
             }
 
             if (body.to) {
+              toDateTime = endOfDay(parseISO(body.to));
               url.searchParams.set(
                 "toDateTime",
-                formatDate(parseISO(body.to), "yyyy-MM-dd")
+                formatDate(toDateTime, "yyyy-MM-dd")
               );
+            }
+
+            if (
+              fromDateTime &&
+              toDateTime &&
+              isAfter(fromDateTime, toDateTime)
+            ) {
+              const res = new Response(
+                '{"error": "From Date cannot be after To Date"}',
+                {
+                  status: 400,
+                  headers: { "Content-Type": "application/json" },
+                }
+              );
+
+              return res;
             }
 
             let transactions: any[] = [];
@@ -119,9 +145,14 @@ const app = new Elysia()
                 method: "get",
                 headers: {
                   Authorization: `Bearer ${process.env.MINTSCAN_API_KEY}`,
-                  "Content-Type": "application/json",
+                  accept: "application/json",
                 },
-              }).then((data) => data.json());
+              }).then((res) => {
+                if (res.ok) {
+                  return res.json();
+                }
+                return { transactions: [], pagination: {} };
+              });
 
               if (data.transactions.length) {
                 transactions.push(...data.transactions);
@@ -139,7 +170,7 @@ const app = new Elysia()
 
             await getData(url);
 
-            return transactions;
+            return JSON.stringify(transactions, null, 2);
           } catch (err) {
             console.log(err);
             return { error: "There was an error" };
